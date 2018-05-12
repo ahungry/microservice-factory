@@ -1,0 +1,16 @@
+# The config that defines what to generate.
+title = "Integer Service"
+
+[database]
+type = "postgres"
+host = "localhost"
+port = 5432
+user = ""
+pass = ""
+
+[noun.MyInt]
+sql = "SELECT 3::int as x, 4::int as y"
+
+[noun.MyInt.props]
+x = "int32"
+y = "int32"

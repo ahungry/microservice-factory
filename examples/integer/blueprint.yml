@@ -1,0 +1,18 @@
+# The config that defines what to generate.
+title: Integer Service
+db:
+  type: postgres
+  host: localhost
+  port: 5432
+  user: ~
+  pass: ~
+
+defs:
+  - name: MyInt
+    get: |
+      SELECT
+        3 as x
+      , 4 as y
+    props:
+      - { name: x, type: int32 }
+      - { name: y, type: int32 }
