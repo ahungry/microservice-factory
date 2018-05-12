@@ -1,5 +1,5 @@
 # The config that defines what to generate.
-title: Integer Service
+title: My Services
 db:
   name: mcarter
   host: localhost
