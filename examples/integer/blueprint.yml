@@ -8,11 +8,20 @@ db:
   pass: ~
 
 defs:
+  - name: Person
+    sql: |
+      SELECT
+        'Jon' as first_name
+      , 'Smith' as last_name
+    props:
+      - { name: first_name, type: string }
+      - { name: last_name, type: string }
+
   - name: MyInt
-    get: |
+    sql: |
       SELECT
         3 as x
       , 4 as y
     props:
-      - { name: x, type: int32 }
-      - { name: y, type: int32 }
+      - { name: x, type: number }
+      - { name: y, type: number }

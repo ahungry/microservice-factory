@@ -28,7 +28,8 @@
   :description "Your project template"
   :author "Your Name <microservice-factory@example.com>"
   :license "GPLv3"
-  :depends-on (#:ahungry-fleece)
+  :depends-on (#:ahungry-fleece
+               #:cl-ppcre)
   :serial t
   :components
   (
@@ -36,7 +37,10 @@
    (:module "libs"
             :pathname "src/libs"
             :components
-            ((:file "microservice-factory.lib.stub")))
+            (
+             (:file "microservice-factory.lib.stub")
+             (:file "mf.lib.parser")
+             ))
 
    ;; The main module
    (:module "microservice-factory"
