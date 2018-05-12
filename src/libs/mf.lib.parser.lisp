@@ -44,12 +44,13 @@
 
 (defmacro fmt (s &rest r) `(format nil ,(regex-replace-all "_" s "~a") ,@r))
 
-(defun sym-to-ref (s) (fmt "#/~(_~)" (symbol-name s)))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun sym-to-ref (s) (fmt "#/~(_~)" (symbol-name s)))
 
-(defmacro with-bp-bindings (make blueprint  &rest props)
-  `(,make ,@(loop for prop in props
-            collect prop
-            collect `(ref ,(sym-to-ref prop) ,blueprint))))
+  (defmacro with-bp-bindings (make blueprint  &rest props)
+    `(,make ,@(loop for prop in props
+                 collect prop
+                 collect `(ref ,(sym-to-ref prop) ,blueprint)))))
 
 (defun build-db (bp-db)
   (with-bp-bindings
