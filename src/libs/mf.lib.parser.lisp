@@ -38,22 +38,38 @@
 
 (defvar blueprint (to-bp int-file))
 
+(defstruct db name host port user pass)
+(defstruct def name sql update-sql props)
 (defstruct props name type)
-(defstruct def name sql props)
+
+(defmacro fmt (s &rest r) `(format nil ,(regex-replace-all "_" s "~a") ,@r))
+
+(defun sym-to-ref (s) (fmt "#/~(_~)" (symbol-name s)))
+
+(defmacro with-bp-bindings (make blueprint  &rest props)
+  `(,make ,@(loop for prop in props
+            collect prop
+            collect `(ref ,(sym-to-ref prop) ,blueprint))))
+
+(defun build-db (bp-db)
+  (with-bp-bindings
+      make-db bp-db
+      :name :host :port :user :pass))
+
+(defun parse-db (bp)
+  (build-db (ref "#/db" bp)))
 
 (defmethod build-props ((obj def))
   (mapcar
-   (lambda (p) (make-props
-                :name (ref "#/name" p)
-                :type (ref "#/type" p)))
+   (lambda (p)
+     (with-bp-bindings make-props p :name :type))
    (def-props obj)))
 
 (defun build-def (bp-def)
   "We expect a name, some sql (get) and some props."
-  (let ((obj (make-def
-              :name (ref "#/name" bp-def)
-              :sql (ref "#/sql" bp-def)
-              :props (ref "#/props" bp-def))))
+  (let ((obj (with-bp-bindings
+                 make-def bp-def
+                 :name :sql :update-sql :props)))
     (setf (def-props obj) (build-props obj))
     obj))
 
@@ -62,7 +78,7 @@
 
 (defmethod to-model-init-props ((p props))
   "Spit out the repo props."
-  (format nil "      ~@(~a~)(o['~a'])~%"
+  (format nil "      ~@(~a~)(o['~a']),~%"
           (props-type p)
           (props-name p)))
 
@@ -77,11 +93,30 @@
   (let ((tpl (file-get-contents int-template)))
     (setf tpl (regex-replace-all "Stub" tpl (def-name obj)))
     (setf tpl (regex-replace-all "__SQL__" tpl (def-sql obj)))
+    (setf tpl (regex-replace-all "__UPDATE-SQL__" tpl (def-update-sql obj)))
     (setf tpl (regex-replace-all
                ".*//propsFromSql" tpl
                (mapcar #'to-model-init-props (def-props obj))))
     (setf tpl (regex-replace-all ".*//props" tpl (mapcar #'to-model-props (def-props obj))))
     tpl))
+
+(defmethod to-typescript-with-db ((obj def) (db-obj db))
+  (let ((tpl (to-typescript obj)))
+    (setf tpl (regex-replace-all "__NAME__" tpl (db-name db-obj)))
+    (setf tpl (regex-replace-all "__HOST__" tpl (db-host db-obj)))
+    (setf tpl (regex-replace-all "__PORT__" tpl (stringify (db-port db-obj))))
+    (setf tpl (regex-replace-all "__USER__" tpl (db-user db-obj)))
+    (setf tpl (regex-replace-all "__PASS__" tpl (db-pass db-obj)))
+    tpl))
+
+(defun test-to-file ()
+  (let* ((bp (to-bp int-file))
+         (db (parse-db bp))
+         (defs (parse-defs bp)))
+    (file-put-contents
+     "/tmp/Person.ts"
+     (to-typescript-with-db (car defs) db)
+     :overwrite t)))
 
 (defun echo (input)
   input)

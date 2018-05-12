@@ -1,19 +1,28 @@
 # The config that defines what to generate.
 title: Integer Service
 db:
-  type: postgres
+  name: mcarter
   host: localhost
   port: 5432
-  user: ~
-  pass: ~
+  user: mcarter
+  pass: ''
 
 defs:
   - name: Person
     sql: |
       SELECT
-        'Jon' as first_name
-      , 'Smith' as last_name
+        first_name
+      , last_name
+      , id
+      FROM blueprint.users
+    update-sql: |
+      UPDATE blueprint.users
+      SET
+        first_name = $(first_name)
+      , last_name  = $(last_name)
+      WHERE id = $(id) RETURNING *
     props:
+      - { name: id, type: number }
       - { name: first_name, type: string }
       - { name: last_name, type: string }
 
